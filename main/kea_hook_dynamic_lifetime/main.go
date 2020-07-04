@@ -3,7 +3,9 @@ package main
 import "C"
 
 import (
+	"net"
 	"strconv"
+	"strings"
 )
 
 var targetVersion string
@@ -36,6 +38,33 @@ func addConfig(ipAddress *C.char, macAddress *C.char, lifetime C.int) {
 		lifetime:   int(lifetime),
 	}
 	loadedConfigs = append(loadedConfigs, goConfig)
+}
+
+//export getLifetime
+func getLifetime(ipAddress *C.char, macAddress *C.char) C.int {
+	ip := net.ParseIP(C.GoString(ipAddress))
+	if ip == nil {
+		return 0
+	}
+	mac := C.GoString(macAddress)
+
+	for _, c := range loadedConfigs {
+		if c.ipAddress != "" {
+			_, cidr, err := net.ParseCIDR(c.ipAddress)
+			if err != nil {
+				continue
+			}
+			if !cidr.Contains(ip) {
+				continue
+			}
+		}
+		if c.macAddress != "" && !strings.HasPrefix(mac, c.macAddress) {
+			continue
+		}
+		return C.int(c.lifetime)
+	}
+
+	return 0
 }
 
 func main() {
