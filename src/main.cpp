@@ -9,12 +9,6 @@
 
 isc::log::Logger logger("dynamic_lifetime");
 
-typedef struct {
-    char* ipAddress;
-    char* macAddress;
-    int lifetime;
-} config;
-
 extern "C" {
     int version() {
         int v = keaVersion();
