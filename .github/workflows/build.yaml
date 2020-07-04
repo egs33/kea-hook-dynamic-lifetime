@@ -1,0 +1,29 @@
+name: ci
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    container:
+      image: golang:1.13
+      env:
+        KEA_VERSION: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.1.0
+      - name: Install dependencies
+        run: |
+          curl -1sLf 'https://dl.cloudsmith.io/public/isc/kea-1-6/cfg/setup/bash.deb.sh' | bash
+          apt update
+          apt install -y cmake isc-kea-dev libboost-dev
+      - name: Build go
+        run: go build -buildmode=c-archive -o go_dist/libdynamic_lifetime_go.a -ldflags="-X main.targetVersion=$KEA_VERSION" ./main/kea_hook_dynamic_lifetime
+      - name: cmake
+        run: cmake .
+      - name: build cpp
+        run: make
+      - name: save build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: build
+          path: libdynamic_lifetime.so
+
