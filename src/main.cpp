@@ -1,21 +1,16 @@
-#include <iostream>
-#include <fstream>
 #include <hooks/hooks.h>
 #include <dhcpsrv/lease.h>
 #include <dhcp/hwaddr.h>
-#include <log/message_initializer.h>
 #include <log/macros.h>
-#include "../go_dist/libdynamic_lifetime_go.h"
+#include "config.h"
 
 isc::log::Logger logger("dynamic_lifetime");
 
+std::vector<Config*> configs;
+
 extern "C" {
     int version() {
-        int v = keaVersion();
-        if (v < 0) {
-            return KEA_HOOKS_VERSION;
-        }
-        return v;
+        return KEA_HOOKS_VERSION;
     }
 
     int load(isc::hooks::LibraryHandle& handle) {
@@ -40,10 +35,8 @@ extern "C" {
                 logger.warn("option 'valid-lifetime' required");
                 continue;
             }
-            int lifetime = v->get("valid-lifetime")->intValue();
-            addConfig(const_cast<char *>(ipAddress.c_str()),
-                    const_cast<char *>(macAddress.c_str()),
-                    lifetime);
+            int64_t lifetime = v->get("valid-lifetime")->intValue();
+            configs.push_back(new Config(ipAddress, macAddress, lifetime));
         }
         return 0;
     }
@@ -51,13 +44,18 @@ extern "C" {
     void updateLifetime(isc::hooks::CalloutHandle& handle) {
         isc::dhcp::Lease4Ptr l4p;
         handle.getArgument("lease4", l4p);
+        if (!l4p->addr_.isV4()) {
+            return;
+        }
         auto macAddress = l4p->hwaddr_->toText(false);
-        int lifetime = getLifetime(
-                const_cast<char *>(l4p->addr_.toText().c_str()),
-                const_cast<char *>(macAddress.c_str()));
-        if (lifetime > 0) {
-            logger.info(("lifetime:" + std::to_string(lifetime) + ", hw-address:" + macAddress).c_str());
-            l4p->valid_lft_ = lifetime;
+        auto ipAddress = l4p->addr_.toUint32();
+        for(auto &&c:configs) {
+            int32_t lifetime = c->getLifetime(ipAddress, macAddress);
+            if (lifetime > 0) {
+                logger.info(("lifetime:" + std::to_string(lifetime) + ", hw-address:" + macAddress).c_str());
+                l4p->valid_lft_ = lifetime;
+                return;
+            }
         }
     }
 

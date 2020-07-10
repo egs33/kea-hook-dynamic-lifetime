@@ -7,6 +7,4 @@ include_directories(/usr/include/kea)
 
 link_libraries(/usr/lib)
 
-add_library(dynamic_lifetime SHARED src/main.cpp)
-
-target_link_libraries(dynamic_lifetime PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/go_dist/libdynamic_lifetime_go.a)
+add_library(dynamic_lifetime SHARED src/main.cpp src/config.cpp src/config.h)
