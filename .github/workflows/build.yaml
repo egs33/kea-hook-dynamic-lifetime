@@ -10,9 +10,9 @@ jobs:
         uses: actions/checkout@v2.1.0
       - name: Install dependencies
         run: |
-          curl -1sLf 'https://dl.cloudsmith.io/public/isc/kea-1-6/cfg/setup/bash.deb.sh' | bash
-          apt update
-          apt install -y cmake isc-kea-dev libboost-dev
+          curl -1sLf 'https://dl.cloudsmith.io/public/isc/kea-1-9/cfg/setup/bash.deb.sh' | sudo bash
+          sudo apt update
+          sudo apt install -y cmake isc-kea-dev libboost-dev
       - name: cmake
         run: cmake .
       - name: build cpp
