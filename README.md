@@ -39,21 +39,11 @@ These config override other `valid-lifetime` config
 
 ## Build
 ### Required
-- golang
 - cmake
 - kea-dev
 - libboost-dev
 
-### 1. Build go source (make static library)
-Run
-```
-$ go build -buildmode=c-archive -o go_dist/libdynamic_lifetime_go.a ./main/kea_hook_dynamic_lifetime
-```
-
-If you require custom [version](https://fossies.org/dox/kea-1.6.2/hooksdgDevelopersGuide.html#hooksdgVersionFunction),
-add `-ldflags="-X main.targetVersion=VERSION"` to command.
-
-### 2. Build shared library
+### Build shared library
 Run
 ```
 $ cmake .
